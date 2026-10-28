@@ -97,3 +97,46 @@ function validateBody(schema) {
     }
 }
 
+// Middleware untuk validasi parameter id
+function validateIdParam(schema) {
+    return (req, res, next) => {
+        const { error, value } = schema.validate(req.params)
+
+        if (error) {
+            return errorResponse(
+                res,
+                'Parameter tidak valid',
+                400,
+                error.details.map(item => ({
+                    field: item.path.join('.'),
+                    message: item.message,
+                }))
+            )
+        }
+
+        req.params = value
+        next()
+    }
+}
+
+// ==========================================
+// ROUTES (CRUD)
+// ==========================================
+
+// GET: Mengambil semua data biodata
+app.get('/', async (req, res, next) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM biodata ORDER BY id'
+        )
+
+        return successResponse(
+            res,
+            'Data berhasil diambil',
+            result.rows
+        )
+    } catch (err) {
+        next(err)
+    }
+})
+

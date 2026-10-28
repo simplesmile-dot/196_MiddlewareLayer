@@ -230,3 +230,14 @@ app.delete(
     }
 )
 
+// ==========================================
+// ROUTE TIDAK DITEMUKAN (404)
+// ==========================================
+app.use((req, res) => {
+    return errorResponse(
+        res,
+        'Endpoint tidak ditemukan',
+        404
+    )
+})
+

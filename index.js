@@ -140,3 +140,63 @@ app.get('/', async (req, res, next) => {
     }
 })
 
+// POST: Menambahkan data biodata baru
+app.post(
+    '/biodata',
+    validateBody(biodataSchema),
+    async (req, res, next) => {
+        try {
+            const { id, nama, nim, kelas } = req.body
+
+            const result = await pool.query(
+                'INSERT INTO biodata (id, nama, nim, kelas) VALUES ($1, $2, $3, $4) RETURNING *',
+                [id ?? null, nama, nim, kelas]
+            )
+
+            return successResponse(
+                res,
+                'Data berhasil ditambahkan',
+                result.rows[0],
+                201
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
+)
+
+// PUT: Mengubah data biodata berdasarkan ID
+app.put(
+    '/biodata/:id',
+    validateIdParam(idSchema),
+    validateBody(biodataSchema.fork(
+        ['nama', 'nim', 'kelas'],
+        field => field.required()
+    ).fork(['id'], field => field.forbidden())),
+    async (req, res, next) => {
+        try {
+            const { id } = req.params
+            const { nama, nim, kelas } = req.body
+
+            const result = await pool.query(
+                'UPDATE biodata SET nama = $1, nim = $2, kelas = $3 WHERE id = $4 RETURNING *',
+                [nama, nim, kelas, id]
+            )
+
+            if (result.rowCount === 0) {
+                return errorResponse(
+                    res, 'Data tidak ditemukan', 404
+                )
+            }
+
+            return successResponse(
+                res,
+                'Data berhasil diubah',
+                result.rows[0]
+            )
+        } catch (err) {
+            next(err)
+        }
+    }
+)
+
